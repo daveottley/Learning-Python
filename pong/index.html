@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pong Game</title>
+  <style>
+    canvas {
+      background: #000;
+      display: block;
+      margin: 0 auto;
+      border: 2px solid #fff;
+    }
+    .centered {
+      text-align: center;
+      color: white;
+      font-family: sans-serif;
+      margin-top: 8px;
+    }
+    button:focus {
+      outline: none; /* No keyboard outline */
+    }
+  </style>
+</head>
+<body>
+<canvas id="pong" width="600" height="400"></canvas>
+
+<div class="centered">
+  <button id="decLvl" tabindex="-1">-</button>
+  <span id="lvlInd">1</span>
+  <button id="incLvl" tabindex="-1">+</button>
+</div>
+
+<script>
+(function(){
+  const cvs=document.getElementById('pong');
+  const ctx=cvs.getContext('2d');
+  const w=cvs.width,h=cvs.height;
+
+  // 10 difficulty levels, each +20% of base speed:
+  // level=1 => multiplier=1.0
+  // level=2 => multiplier=1.2
+  // ...
+  // level=10=> multiplier=1 + 0.2*(10-1) = 2.8
+  let level=1;
+
+  // Buttons & indicator
+  const decBtn=document.getElementById('decLvl');
+  const incBtn=document.getElementById('incLvl');
+  const lvlInd=document.getElementById('lvlInd');
+
+  // Players
+  let p1={x:10,y:h/2-30,w:10,h:60,vy:0,maxSpeed:7,score:0};
+  let p2={x:w-20,y:h/2-30,w:10,h:60,vy:0,maxSpeed:7,score:0};
+
+  // Ball
+  let b={x:w/2,y:h/2,r:8,dx:3,dy:3,s:4};
+
+  // Round
+  let round=1,roundActive=false;
+
+  // Base speeds (used for difficulty scaling)
+  const baseDx=3, baseDy=3, baseS=4;
+
+  // Update the +/- buttons depending on round state & level boundaries
+  function updateControls(){
+    // Only change difficulty while round is inactive
+    decBtn.disabled=roundActive || level<=1;
+    incBtn.disabled=roundActive || level>=10;
+    lvlInd.textContent=level;
+  }
+
+  function getMultiplier(){
+    return 1+0.2*(level-1);
+  }
+
+  function resetBall(){
+    b.x=w/2; b.y=h/2;
+    let m=getMultiplier();
+    let signX=(Math.random()<0.5?-1:1);
+    let signY=(Math.random()<0.5?-1:1);
+    b.dx=baseDx*m*signX;
+    b.dy=baseDy*m*signY;
+    b.s =baseS*m;
+  }
+
+  function drawRect(x,y,wd,ht,color){
+    ctx.fillStyle=color;
+    ctx.fillRect(x,y,wd,ht);
+  }
+
+  function drawCircle(x,y,r,color){
+    ctx.fillStyle=color;
+    ctx.beginPath();
+    ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawText(txt,x,y,color){
+    ctx.fillStyle=color;
+    ctx.font='20px sans-serif';
+    ctx.fillText(txt,x,y);
+  }
+
+  function drawOverlay(){
+    ctx.fillStyle='rgba(0,0,0,0.6)';
+    ctx.fillRect(0,0,w,h);
+    ctx.fillStyle='white';
+    ctx.font='24px sans-serif';
+    ctx.fillText(`Round ${round}`,w/2-50,h/2-10);
+    ctx.font='18px sans-serif';
+    ctx.fillText('Press ENTER to start',w/2-90,h/2+15);
+  }
+
+  function updateBall(){
+    b.x+=b.dx; b.y+=b.dy;
+    if(b.y-b.r<0 || b.y+b.r>h) b.dy=-b.dy;
+
+    // Scoring
+    if(b.x-b.r<0){p2.score++; nextRound();}
+    if(b.x+b.r>w){p1.score++; nextRound();}
+
+    // Paddle collision
+    let paddle=(b.x<w/2)?p1:p2;
+    if(b.x-b.r<paddle.x+paddle.w&&b.x+b.r>paddle.x &&
+       b.y-b.r<paddle.y+paddle.h&&b.y+b.r>paddle.y){
+      let cp=(b.y-(paddle.y+paddle.h/2))/(paddle.h/2);
+      let angle=(Math.PI/4)*cp;
+      let dir=(b.x<w/2?1:-1);
+      b.dx=dir*b.s*Math.cos(angle);
+      b.dy=b.s*Math.sin(angle);
+    }
+  }
+
+  function updatePaddles(){
+    p1.y+=p1.vy;
+    if(p1.y<0)p1.y=0;
+    if(p1.y+p1.h>h)p1.y=h-p1.h;
+
+    p2.y+=p2.vy;
+    if(p2.y<0)p2.y=0;
+    if(p2.y+p2.h>h)p2.y=h-p2.h;
+  }
+
+  function nextRound(){
+    round++;
+    roundActive=false;
+    updateControls();
+  }
+
+  function update(){
+    if(roundActive) updateBall();
+    updatePaddles();
+  }
+
+  function draw(){
+    drawRect(0,0,w,h,'black');
+    drawRect(p1.x,p1.y,p1.w,p1.h,'white');
+    drawRect(p2.x,p2.y,p2.w,p2.h,'white');
+    drawCircle(b.x,b.y,b.r,'white');
+    drawText(p1.score,w/4,30,'white');
+    drawText(p2.score,3*w/4,30,'white');
+    if(!roundActive) drawOverlay();
+  }
+
+  function gameLoop(){
+    update();
+    draw();
+  }
+
+  setInterval(gameLoop,1000/60);
+
+  // Key events
+  document.addEventListener('keydown',(e)=>{
+    switch(e.key){
+      case 'w': p1.vy=-p1.maxSpeed; break;
+      case 's': p1.vy= p1.maxSpeed; break;
+      case 'ArrowUp':   p2.vy=-p2.maxSpeed; break;
+      case 'ArrowDown': p2.vy= p2.maxSpeed; break;
+      case 'Enter':
+        if(!roundActive){
+          roundActive=true;
+          resetBall();
+          updateControls();
+        }
+        break;
+    }
+  });
+
+  document.addEventListener('keyup',(e)=>{
+    switch(e.key){
+      case 'w':
+      case 's': p1.vy=0; break;
+      case 'ArrowUp':
+      case 'ArrowDown': p2.vy=0; break;
+    }
+  });
+
+  // Mouse events for +/-
+  decBtn.addEventListener('click',()=>{
+    if(level>1){level--; updateControls();}
+  });
+  incBtn.addEventListener('click',()=>{
+    if(level<10){level++; updateControls();}
+  });
+
+  // Initial control state
+  updateControls();
+})();
+</script>
+</body>
+</html>
+
