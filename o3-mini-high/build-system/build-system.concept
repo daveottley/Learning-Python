@@ -1,0 +1,7 @@
+The data structure that would best model the scenario of mapping source file dependencies is a graph. Each file can be thought of as a node and each dependency as a child node. Since a source file can depend on more than one file and thus have more than one parent a tree is not appropriate here. Depending on how the graph is implemented it may not  be the most efficient data structure for very large data sets, but it models the scenario well and my guess on time efficiency is O(n) where n is the number of edges on the graph. I would like more instruction on the efficiency and time/space complexity of graphs. 
+
+* I would handle cycle detection by following each node to its children recursively. I would build a list of nodes I had visited and if at any time I reached a node I had visited before I would know that a cycle exists. In this case I should return an error code indicating a cycle.
+
+* If our graph was implemented as an adjacency matrix instead of an adjacency list it would require O(V^2) memory which is inefficient for build systems where we may have a high number of vertices (source files). It would also become more computationally expensive to add or remove elements from the matrix, which is not ideal for a build system.
+
+If you think I'm ready, we can move on to psuedocode. Let me know.
