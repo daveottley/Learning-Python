@@ -1,0 +1,34 @@
+function topo_sort_kahn(graph): # Graph stored as adjacency list {u: [v1, v2, v3,...]}
+  # Initialize in_degree to all zeroes.
+  hashmap in_degree = {}
+  for node in graph:
+    in_degree[node] = 0
+  
+  # Calculate in-degree of each node
+  for u in graph:
+    for v in graph[u]:
+      in_degree[v] = in_degree.get(v, 0) + 1
+
+  # Create a queue of nodes with zero in-degree
+  Q = queue([u for u in graph if in_degree[u] == 0]) # queue is a FIFO datastructure
+  ordering = []
+  
+  # Pop each node into the queue
+  while Q:
+    u = Q.popleft()
+    ordering.append(u)
+    
+    # Reduce the in-degree of each connected node
+    for v in graph.get(u, []): # Return a blank list of connects as default
+      in_degree[v] -= 1
+      if in_degree[v] == 0:
+        Q.append(v)
+
+  # Cycle exists if not all nodes were ordered
+  if len(ordering) != len(in_degree)
+    raise ValueError("Cycle detected in build dependencies")
+  return ordering
+
+# Example usage:
+print("Build order (Kahn):", topo_sort_kahn(build_graph))
+
