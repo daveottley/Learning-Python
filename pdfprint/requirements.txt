@@ -1,0 +1,16 @@
+apparmor==4.0.3
+attrs==23.2.1.dev0
+cffi==1.17.1
+cryptography==44.0.1
+filelock==3.17.0
+legacy-cgi==2.6.2
+LibAppArmor==4.0.3
+meson==1.7.0
+packaging==24.2
+pycairo==1.27.0
+pycparser==2.22
+PyGObject==3.50.0
+ranger-fm==1.9.4
+Reflector==2023.6.28.0.36.1
+tqdm==4.67.1
+wheel==0.45.0
