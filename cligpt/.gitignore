@@ -1,8 +1,0 @@
-conversations/
-.venv/
-context.txt
-*.bak
-*.old
-__pycache__/
-permanent_memory.json
-error.log
